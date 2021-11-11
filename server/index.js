@@ -3,9 +3,10 @@ const app = express();
 const mongoose = require('mongoose');
 
 
+const {auth} = require('./middleware/auth');
 const {User} = require('./models/User');
-const config = require('./config/key');
-const cookieParser = require('cookie-parser')
+const config = require('./config/key');;
+const cookieParser = require('cookie-parser');
 
 
 
@@ -82,10 +83,44 @@ app.post('/api/user/login', (req, res) => {
             res.cookie("cookie_save", user.token)
             .status(200)
             .json({loginSuccess : true, userId : user._id})
-            
+
             })
         })
     })
+})
+
+
+//클라이언트가 받는다. 
+app.get('/api/user/auth', auth, (req, res) => {
+
+    //여기까지 왔다면 미들웨어가 통과되서 실행이 가능 !!
+
+    res.status(200),json({
+        _id : req.user._id,
+        isAdmn : req.user.role === 0 ? false : true,
+        isAuth : true,
+        email : req.user.email,
+        name : req.user.name,
+        lastname : req.user.lastname,
+        role : req.user.role,
+        image : req.user.image
+    })
+
+})
+
+app.get('/api/user/logout', auth, (req, res) => {
+    
+
+    //로그아웃 하려는 유저를 Db에서 찾아라 ~! 
+    User.findOneAndUpdate({ _id: req.user._id}, 
+        { token :"" },
+        (err, user) => {
+            if (err) return res.json({ success : false, err});
+            return res.status(200).send({
+                success : true
+            })
+        })
+
 })
 
 
