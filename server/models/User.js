@@ -1,14 +1,11 @@
 //User에 대한 정보가 들어가 있는 컴포넌트이다 . 
 
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
-
-// const bcrypt = require('bcrypt');
-
-// // salt가 몇글자인지 나타낸다. 
-// const saltRounds = 10;
-
-// const jwt = require('jsonwebtoken');
+//salt가 몇글자인지 나타낸다.  
+const saltRounds = 10;
+const jwt = require('jsonwebtoken');
 
 
 
@@ -49,8 +46,54 @@ const userSchema = mongoose.Schema({
 
 })
 
+userSchema.pre('save', function (next) {
+    var user = this;
 
-const User = mongoose.model('user', userSchema);
+    if(user.isModified('password')) {
 
 
-module .exports = {User};
+    bcrypt.genSalt(saltRounds, function (err, salt) {
+        if(err) return next(err)
+
+        bcrypt.hash(user.password, salt, function (err, hash) {
+            if(err) return next (err)
+            user.password = hash
+
+            next()
+        });
+    });
+    } else {
+        next();
+    }
+});
+
+//comparePassword의 해당 메소드 만든 것 
+                                              //현재 비번  //콜백함수 
+userSchema.methods.comparePassword = function(plainPssword, cb) {
+
+       // 같은지 체크 해야된다. 
+    //plainPssword 12345 === 암호화된 비번 : asld@1234%sdk123
+
+    //현재 비밀번호와 암호화된 비번을 비교한다.
+    bcrypt.compare(plainPssword, this.password, function(err, isMatch) {
+        if(err) return cb(err);
+
+        // 같다면 Match가 됐다고 알린다.
+        cb(null, isMatch)
+    })
+}
+
+userSchema.methods.generateToken = function(cb) {
+
+    var user = this;
+    //jsoinWebTonken을 이용해서 token을 생성하기 
+
+
+    //user._id + 'secretToken' = token 토큰 만들기 
+    var token = jwt.sign(user._id.toHexString(), 'secretToken')
+}
+
+
+
+const User = mongoose.model('User', userSchema);
+module.exports = { User }
