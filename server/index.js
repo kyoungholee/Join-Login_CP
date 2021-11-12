@@ -20,7 +20,9 @@ mongoose.connect(config.mongoURI)
 
 app.get('/', (req, res) => res.send("안녕하세여!!"))
 
-
+app.get('/api/hello', (req, res) => {
+    res.send('dkekdwkd!~')
+})
 
 
 

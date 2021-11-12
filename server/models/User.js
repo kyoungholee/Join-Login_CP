@@ -49,6 +49,7 @@ const userSchema = mongoose.Schema({
 userSchema.pre('save', function (next) {
     var user = this;
 
+    //회원가입에 들어가는 비밀번호 암호화 !!
     if(user.isModified('password')) {
 
 
